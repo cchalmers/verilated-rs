@@ -24,9 +24,7 @@ fn main() {
 
     let mut clocks: u64 = 0;
     while tb.count_o() < 10 {
-        if clocks == 0 {
-            tb.reset_toggle();
-        } else if clocks == 2 {
+        if clocks == 0 || clocks == 2 {
             tb.reset_toggle();
         }
 
