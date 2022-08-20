@@ -30,7 +30,7 @@ fn main() {
 
         let mut target = getenv_unwrap("TARGET");
         if target.ends_with("-darwin") {
-            target = target + "11";
+            target += "11";
         }
 
         let files = vec![

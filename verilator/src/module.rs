@@ -21,6 +21,7 @@ macro_rules! t {
 }
 
 /// A builder used to generate verilator FFI shim.
+#[derive(Default)]
 pub struct ModuleGenerator {
     out_dir: Option<PathBuf>,
     target: Option<String>,
@@ -104,15 +105,6 @@ impl ModuleGenerator {
     }
 }
 
-impl Default for ModuleGenerator {
-    fn default() -> ModuleGenerator {
-        ModuleGenerator {
-            out_dir: None,
-            target: None,
-        }
-    }
-}
-
 fn check_name(attr: &Attribute, name: &str) -> bool {
     if let Some(meta) = attr.interpret_meta() {
         meta.name() == name
@@ -122,10 +114,7 @@ fn check_name(attr: &Attribute, name: &str) -> bool {
 }
 
 fn is_public(vis: &Visibility) -> bool {
-    match vis {
-        Visibility::Public(..) => true,
-        _ => false,
-    }
+    matches!(vis, Visibility::Public(..))
 }
 
 struct StructFinder {
@@ -434,7 +423,7 @@ impl<'ast, 'b> Visit<'ast> for Generator<'b> {
             if !acc.is_empty() {
                 let rs_ty = i.ident.to_string();
                 let c_ty = &acc[0];
-                self.gen_module(&rs_ty, &c_ty, i);
+                self.gen_module(&rs_ty, c_ty, i);
 
                 if !self.found_module {
                     if let Some(path) = self.krate.to_str() {
@@ -475,10 +464,8 @@ enum PortAttr {
 
 type NestedMetaList = Punctuated<NestedMeta, Comma>;
 fn list_contains_name(list: &NestedMetaList, name: &str) -> bool {
-    list.iter().any(|meta| match meta {
-        NestedMeta::Meta(Meta::Word(ref ident)) if ident == name => true,
-        _ => false,
-    })
+    list.iter()
+        .any(|meta| matches!(meta, NestedMeta::Meta(Meta::Word(ref ident)) if ident == name))
 }
 
 fn find_port_attr(attrs: &[Attribute]) -> PortAttr {

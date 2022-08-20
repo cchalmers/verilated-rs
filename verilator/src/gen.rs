@@ -16,6 +16,7 @@ pub enum Standard {
 }
 
 /// Builder style configuration for running verilator.
+#[derive(Default)]
 pub struct Verilator {
     target: Option<String>,
     host: Option<String>,
@@ -153,7 +154,7 @@ impl Verilator {
         println!("verilator root: {:?}", root);
 
         // Generate .CPP from .V using verilator
-        let mut cmd = Command::new(verilator_exe.clone());
+        let mut cmd = Command::new(verilator_exe);
         cmd.arg("--cc")
             .arg("-Mdir")
             .arg(&dst)
@@ -301,23 +302,6 @@ impl Verilator {
         self.root
             .clone()
             .or_else(|| env::var_os("VERILATOR_ROOT").map(PathBuf::from))
-    }
-}
-
-impl Default for Verilator {
-    fn default() -> Verilator {
-        Verilator {
-            target: None,
-            host: None,
-            out_dir: None,
-            root: None,
-            files: Vec::new(),
-            module_directories: Vec::new(),
-            coverage: false,
-            trace: false,
-            optimized: false,
-            suppress_warnings: Vec::new(),
-        }
     }
 }
 
