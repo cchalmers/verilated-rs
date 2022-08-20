@@ -3,7 +3,6 @@ use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{env, fs};
-use verilator_version;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Standard {
@@ -137,9 +136,6 @@ impl Verilator {
         let mut cmd = Command::new(verilator_exe.clone());
         cmd.arg("--getenv").arg("VERILATOR_ROOT");
 
-        // Determine the Verilator version
-        let (verilator_major, verilator_minor) = verilator_version().unwrap();
-
         println!("running: {:?}", cmd);
         let root = match cmd.output() {
             Ok(output) => PathBuf::from(String::from_utf8_lossy(&output.stdout).trim()),
@@ -252,12 +248,13 @@ impl Verilator {
         cpp_cfg
             .include(root.join("include"))
             .include(root.join("include/vltstd"))
-            .include(&dst)
-            .file(dst.join(format!("V{}.cpp", top_module)))
-            .file(dst.join(format!("V{}__Syms.cpp", top_module)));
+            .include(&dst);
 
-        if verilator_major > 4 || verilator_minor >= 38 {
-            cpp_cfg.file(dst.join(format!("V{}__Slow.cpp", top_module)));
+        for entry in std::fs::read_dir(&dst).unwrap() {
+            let path = entry.unwrap().path();
+            if path.extension() == Some(std::ffi::OsStr::new("cpp")) {
+                cpp_cfg.file(path);
+            }
         }
 
         for &(ref f, _) in &self.files {
@@ -275,9 +272,7 @@ impl Verilator {
 
         if self.trace {
             cpp_cfg
-                .define("VM_TRACE", "1")
-                .file(dst.join(format!("V{}__Trace.cpp", top_module)))
-                .file(dst.join(format!("V{}__Trace__Slow.cpp", top_module)));
+                .define("VM_TRACE", "1");
         }
 
         cpp_cfg.compile(&format!("V{}__ALL", top_module));
