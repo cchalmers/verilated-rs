@@ -1,9 +1,9 @@
-use verilator_version;
 use cc;
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{env, fs};
+use verilator_version;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Standard {
@@ -25,7 +25,7 @@ pub struct Verilator {
     module_directories: Vec<PathBuf>,
     coverage: bool,
     trace: bool,
-    optimized: bool, 
+    optimized: bool,
     suppress_warnings: Vec<String>,
 }
 
